@@ -1,0 +1,1 @@
+# kinoshki-reg-mero-bot
