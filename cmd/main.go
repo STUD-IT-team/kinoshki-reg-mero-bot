@@ -4,6 +4,8 @@ import (
 	"log"
 	"strings"
 
+	api "main/internal"
+
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 )
 
@@ -21,6 +23,7 @@ func main() {
 		{Command: "register", Description: "Регистрация"},
 		{Command: "schedule", Description: "Расписание"},
 		{Command: "elements", Description: "Графические элементы"},
+		{Command: "test_api", Description: "Тестирование API функций"},
 	}
 	_, err = bot.Request(tgbotapi.NewSetMyCommands(commands...))
 	if err != nil {
@@ -65,6 +68,9 @@ func main() {
 
 		case msgText == "/elements":
 			showElementsMenu(bot, chatID)
+
+		case msgText == "/test_api":
+			testAPIFunctions(bot, chatID)
 
 		default:
 			if state, ok := userStates[chatID]; ok {
@@ -112,7 +118,16 @@ func handleCallback(bot *tgbotapi.BotAPI, update tgbotapi.Update) {
 	chatID := query.Message.Chat.ID
 	data := query.Data
 
+	callback := tgbotapi.NewCallback(query.ID, "")
+	if _, err := bot.Request(callback); err != nil {
+		log.Println("Ошибка callback:", err)
+	}
+
 	switch {
+	case data == "test_regular":
+		msg := tgbotapi.NewMessage(chatID, "Вы нажали обычную тестовую кнопку")
+		bot.Send(msg)
+
 	case data == "btn1":
 		msg := tgbotapi.NewMessage(chatID, "Вы нажали кнопку 1")
 		bot.Send(msg)
@@ -222,4 +237,33 @@ func groupKeyboard() tgbotapi.InlineKeyboardMarkup {
 			tgbotapi.NewInlineKeyboardButtonData("ИУ6-12Б", "group_iu6_12b"),
 		),
 	)
+}
+
+func testAPIFunctions(bot *tgbotapi.BotAPI, chatID int64) {
+	err := api.SendButtons(bot, chatID, "Тестирование Inline-кнопок:", [][]api.Button{
+		{
+			{Text: "Обычная кнопка", Data: "test_regular"},
+			{Text: "URL-кнопка", URL: "https://bmstu.ru"},
+		},
+		{
+			{Text: "WebApp кнопка", WebApp: &tgbotapi.WebAppInfo{URL: "https://telegram.org"}},
+		},
+	})
+	if err != nil {
+		log.Println("Ошибка SendButtons:", err)
+	}
+
+	err = api.SendReplyKeyboard(bot, chatID, "Тестирование Reply-клавиатуры:", [][]api.ReplyButton{
+		{
+			{Text: "Обычная кнопка 1"},
+			{Text: "Обычная кнопка 2"},
+		},
+		{
+			{Text: "Отправить контакт", IsContact: true},
+			{Text: "WebApp", WebApp: &tgbotapi.WebAppInfo{URL: "https://telegram.org"}},
+		},
+	}, true)
+	if err != nil {
+		log.Println("Ошибка SendReplyKeyboard:", err)
+	}
 }
