@@ -1,0 +1,20 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:15.4-alpine
+    container_name: pg_event_db
+    environment:
+      POSTGRES_USER: event_user
+      POSTGRES_PASSWORD: event_pass
+      POSTGRES_DB: event_db
+    volumes:
+      - ./data:/var/lib/postgresql/data
+      - ./sql:/docker-entrypoint-initdb.d
+    ports:
+      - "5432:5432"
+    #healthcheck:
+    #  test: ["CMD-SHELL", "pg_isready -U event_user -d event_db"]
+    #  interval: 5s
+    #  timeout: 5s
+     # retries: 5
